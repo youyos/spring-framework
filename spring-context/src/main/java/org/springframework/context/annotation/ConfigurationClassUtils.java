@@ -87,14 +87,17 @@ abstract class ConfigurationClassUtils {
 		}
 
 		AnnotationMetadata metadata;
+		// 判断是否是一个注解类型的BD
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
 			// Can reuse the pre-parsed metadata from the given BeanDefinition...
+			// 可以重用来自给定BeanDefinition的预先解析的元数据...
 			metadata = ((AnnotatedBeanDefinition) beanDef).getMetadata();
 		}
 		else if (beanDef instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) beanDef).hasBeanClass()) {
 			// Check already loaded Class if present...
 			// since we possibly can't even load the class file for this Class.
+			// 检查已经加载的Class（如果存在）因为我们甚至可能无法加载该Class的class文件
 			Class<?> beanClass = ((AbstractBeanDefinition) beanDef).getBeanClass();
 			metadata = new StandardAnnotationMetadata(beanClass, true);
 		}
@@ -112,10 +115,15 @@ abstract class ConfigurationClassUtils {
 			}
 		}
 
+		// 这里判断是否是一个全注解类 加了@Configuration的类就是一个全注解类
 		if (isFullConfigurationCandidate(metadata)) {
+			// 给bd设置一个标识full
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		// 半注解类@Component @ComponentScan @Import @ImportResource @Bean的类
+		// 这几个注解统称为配置类
 		else if (isLiteConfigurationCandidate(metadata)) {
+			//  给bd设置一个标识lite
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
 		else {

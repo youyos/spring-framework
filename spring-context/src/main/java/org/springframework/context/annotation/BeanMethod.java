@@ -41,6 +41,7 @@ final class BeanMethod extends ConfigurationMethod {
 	public void validate(ProblemReporter problemReporter) {
 		if (getMetadata().isStatic()) {
 			// static @Bean methods have no constraints to validate -> return immediately
+			// 静态@Bean方法没有验证约束->立即返回
 			return;
 		}
 

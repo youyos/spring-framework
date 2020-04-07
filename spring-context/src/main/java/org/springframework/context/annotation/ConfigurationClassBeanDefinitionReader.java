@@ -121,10 +121,14 @@ class ConfigurationClassBeanDefinitionReader {
 	/**
 	 * Read a particular {@link ConfigurationClass}, registering bean definitions
 	 * for the class itself and all of its {@link Bean} methods.
+	 * 阅读特定的{@link ConfigurationClass}，
+	 * 为类本身及其所有{@link Bean}方法注册bean定义
 	 */
 	private void loadBeanDefinitionsForConfigurationClass(
 			ConfigurationClass configClass, TrackedConditionEvaluator trackedConditionEvaluator) {
 
+
+		// 跳过则移除
 		if (trackedConditionEvaluator.shouldSkip(configClass)) {
 			String beanName = configClass.getBeanName();
 			if (StringUtils.hasLength(beanName) && this.registry.containsBeanDefinition(beanName)) {
@@ -134,19 +138,24 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 处理@Import类，添加到bdMap中
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		// 处理@Bean方法
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		// 处理@ImportResource
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// 处理ImportRegistrars
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
 	/**
 	 * Register the {@link Configuration} class itself as a bean definition.
+	 * 将{@link Configuration}类本身注册为Bean定义。
 	 */
 	private void registerBeanDefinitionForImportedConfigurationClass(ConfigurationClass configClass) {
 		AnnotationMetadata metadata = configClass.getMetadata();
@@ -159,6 +168,7 @@ class ConfigurationClassBeanDefinitionReader {
 
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(configBeanDef, configBeanName);
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// 添加到bdMap中
 		this.registry.registerBeanDefinition(definitionHolder.getBeanName(), definitionHolder.getBeanDefinition());
 		configClass.setBeanName(configBeanName);
 
@@ -186,6 +196,7 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 拿到@Bean的属性值
 		AnnotationAttributes bean = AnnotationConfigUtils.attributesFor(metadata, Bean.class);
 		Assert.state(bean != null, "No @Bean annotation attributes");
 
@@ -211,9 +222,10 @@ class ConfigurationClassBeanDefinitionReader {
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata);
 		beanDef.setResource(configClass.getResource());
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
-
+		// 判断是否是静态的
 		if (metadata.isStatic()) {
 			// static @Bean method
+			// factory method
 			beanDef.setBeanClassName(configClass.getMetadata().getClassName());
 			beanDef.setFactoryMethodName(methodName);
 		}
@@ -222,12 +234,14 @@ class ConfigurationClassBeanDefinitionReader {
 			beanDef.setFactoryBeanName(configClass.getBeanName());
 			beanDef.setUniqueFactoryMethodName(methodName);
 		}
+		// 设置注入模型：构造注入
 		beanDef.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		beanDef.setAttribute(org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor.
 				SKIP_REQUIRED_CHECK_ATTRIBUTE, Boolean.TRUE);
 
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(beanDef, metadata);
 
+		// 是否手动设置注入模型：byType or byName
 		Autowire autowire = bean.getEnum("autowire");
 		if (autowire.isAutowire()) {
 			beanDef.setAutowireMode(autowire.value());
@@ -271,6 +285,7 @@ class ConfigurationClassBeanDefinitionReader {
 			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
+		// 添加到BDMap中
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 
@@ -361,6 +376,7 @@ class ConfigurationClassBeanDefinitionReader {
 
 	private void loadBeanDefinitionsFromRegistrars(Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> registrars) {
 		registrars.forEach((registrar, metadata) ->
+				// 直接调用registerBeanDefinitions往BDMap中添加BD
 				registrar.registerBeanDefinitions(metadata, this.registry));
 	}
 

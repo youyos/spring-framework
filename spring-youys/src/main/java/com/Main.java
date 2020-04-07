@@ -17,7 +17,10 @@ public class Main {
 		AnnotationConfigApplicationContext annotationConfigApplicationContext =
 				new AnnotationConfigApplicationContext(AppConfig.class);
 
+////		annotationConfigApplicationContext.scan("com");
+
 		UserService userService = annotationConfigApplicationContext.getBean(UserService.class);
 		System.out.println(userService.getUser());
+
 	}
 }

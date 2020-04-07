@@ -272,14 +272,18 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
+			// 扫描@Components注解的类
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 			for (BeanDefinition candidate : candidates) {
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
+				// 生成一个beanName
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
+				// ScannedGenericBeanDefinition 继承了 AbstractBeanDefinition
 				if (candidate instanceof AbstractBeanDefinition) {
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}
+				// ScannedGenericBeanDefinition 实现了AnnotatedBeanDefinition接口
 				if (candidate instanceof AnnotatedBeanDefinition) {
 					AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
 				}
@@ -288,10 +292,13 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
+					// 添加到BDMap中
 					registerBeanDefinition(definitionHolder, this.registry);
 				}
 			}
 		}
+
+		// 返回所有扫描出来的BD
 		return beanDefinitions;
 	}
 
@@ -302,7 +309,9 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 * @param beanName the generated bean name for the given bean
 	 */
 	protected void postProcessBeanDefinition(AbstractBeanDefinition beanDefinition, String beanName) {
+		// 设置默认的一些属性值
 		beanDefinition.applyDefaults(this.beanDefinitionDefaults);
+		// 我们并没有为 this.autowireCandidatePatterns 赋值
 		if (this.autowireCandidatePatterns != null) {
 			beanDefinition.setAutowireCandidate(PatternMatchUtils.simpleMatch(this.autowireCandidatePatterns, beanName));
 		}
@@ -321,6 +330,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 
 
 	/**
+	 * 检查给定候选者的bean名称，确定是否需要注册相应的* bean定义或与现有定义冲突。
 	 * Check the given candidate's bean name, determining whether the corresponding
 	 * bean definition needs to be registered or conflicts with an existing definition.
 	 * @param beanName the suggested name for the bean
@@ -335,11 +345,13 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		if (!this.registry.containsBeanDefinition(beanName)) {
 			return true;
 		}
+		// 拿到已经存在的BeanDefinition
 		BeanDefinition existingDef = this.registry.getBeanDefinition(beanName);
 		BeanDefinition originatingDef = existingDef.getOriginatingBeanDefinition();
 		if (originatingDef != null) {
 			existingDef = originatingDef;
 		}
+		// 如果与已存在的bd有冲突，则返回false，不添加到BD map中
 		if (isCompatible(beanDefinition, existingDef)) {
 			return false;
 		}
@@ -351,6 +363,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	/**
 	 * Determine whether the given new bean definition is compatible with
 	 * the given existing bean definition.
+	 * 确定给定的新bean定义是否与给定的现有bean定义兼容。
 	 * <p>The default implementation considers them as compatible when the existing
 	 * bean definition comes from the same source or from a non-scanning source.
 	 * @param newDefinition the new bean definition, originated from scanning
