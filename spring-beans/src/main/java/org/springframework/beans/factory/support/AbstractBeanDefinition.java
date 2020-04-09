@@ -822,6 +822,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 	/**
 	 * Return if there are constructor argument values defined for this bean.
+	 * 返回是否有为此bean定义的构造函数参数值。
 	 */
 	@Override
 	public boolean hasConstructorArgumentValues() {
@@ -961,6 +962,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	/**
 	 * Return whether this bean definition is 'synthetic', that is,
 	 * not defined by the application itself.
+	 * 返回此bean定义是否是“合成的”，即*不是由应用程序本身定义的。
 	 */
 	public boolean isSynthetic() {
 		return this.synthetic;

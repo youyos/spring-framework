@@ -107,6 +107,9 @@ class ConstructorResolver {
 	 * <p>This corresponds to constructor injection: In this mode, a Spring
 	 * bean factory is able to host components that expect constructor-based
 	 * dependency resolution.
+	 * “自动装配构造函数”（按类型带有构造函数参数）的行为。
+	 * 如果指定了显式构造函数参数值，则同样适用将所有剩余参数与bean工厂中的bean匹配。
+	 * <p>这对应于构造函数注入：在这种模式下，Spring bean工厂能够托管期望基于构造函数依赖关系解析的组件。
 	 * @param beanName the name of the bean
 	 * @param mbd the merged bean definition for the bean
 	 * @param chosenCtors chosen candidate constructors (or {@code null} if none)
@@ -120,7 +123,9 @@ class ConstructorResolver {
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		// 需要使用的构造方法
 		Constructor<?> constructorToUse = null;
+		// 需要使用的构造方法参数
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
@@ -145,7 +150,7 @@ class ConstructorResolver {
 		}
 
 		if (constructorToUse == null || argsToUse == null) {
-			// Take specified constructors, if any.
+			// Take specified constructors, if any. 采用指定的构造函数（如果有）。
 			Constructor<?>[] candidates = chosenCtors;
 			if (candidates == null) {
 				Class<?> beanClass = mbd.getBeanClass();
@@ -161,9 +166,12 @@ class ConstructorResolver {
 			}
 
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
+				// 如果只有一个构造方法，则就使用这个
 				Constructor<?> uniqueCandidate = candidates[0];
+				// 如果构造参数是0，则直接使用默认无参构造实例化
 				if (uniqueCandidate.getParameterCount() == 0) {
 					synchronized (mbd.constructorArgumentLock) {
+						// 给bd赋值
 						mbd.resolvedConstructorOrFactoryMethod = uniqueCandidate;
 						mbd.constructorArgumentsResolved = true;
 						mbd.resolvedConstructorArguments = EMPTY_ARGS;
@@ -173,11 +181,12 @@ class ConstructorResolver {
 				}
 			}
 
-			// Need to resolve the constructor.
+			// Need to resolve the constructor.需要解决构造函数。autowiring=true
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;
 
+			// 最小构造参数个数
 			int minNrOfArgs;
 			if (explicitArgs != null) {
 				minNrOfArgs = explicitArgs.length;
@@ -189,10 +198,12 @@ class ConstructorResolver {
 			}
 
 			AutowireUtils.sortConstructors(candidates);
+			// 最小类型差异权重
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
+			// candidates.length = 0 || = 1
 			for (Constructor<?> candidate : candidates) {
 				Class<?>[] paramTypes = candidate.getParameterTypes();
 
@@ -238,9 +249,11 @@ class ConstructorResolver {
 					argsHolder = new ArgumentsHolder(explicitArgs);
 				}
 
+				// typeDiffWeight 默认=-1023  如果有多个构造方法，次算法是最小差异匹配
 				int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
 						argsHolder.getTypeDifferenceWeight(paramTypes) : argsHolder.getAssignabilityWeight(paramTypes));
 				// Choose this constructor if it represents the closest match.
+				// 如果它表示最接近的匹配，请选择此构造函数。 第一次条件肯定成立
 				if (typeDiffWeight < minTypeDiffWeight) {
 					constructorToUse = candidate;
 					argsHolderToUse = argsHolder;
@@ -282,6 +295,7 @@ class ConstructorResolver {
 		}
 
 		Assert.state(argsToUse != null, "Unresolved constructor arguments");
+		// 使用上面确定好的构造方法和参数进行实例化
 		bw.setBeanInstance(instantiate(beanName, mbd, constructorToUse, argsToUse));
 		return bw;
 	}
@@ -297,6 +311,7 @@ class ConstructorResolver {
 						this.beanFactory.getAccessControlContext());
 			}
 			else {
+				// 实例化
 				return strategy.instantiate(mbd, beanName, this.beanFactory, constructorToUse, argsToUse);
 			}
 		}

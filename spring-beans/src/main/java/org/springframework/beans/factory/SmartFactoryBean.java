@@ -21,6 +21,7 @@ package org.springframework.beans.factory;
  * indicate whether they always return independent instances, for the
  * case where their {@link #isSingleton()} implementation returning
  * {@code false} does not clearly indicate independent instances.
+ * {@link FactoryBean}接口的扩展。实现可能指示它们是否总是返回独立实例，对于其{@link #isSingleton（）}实现返回 {@code false}的情况并没有明确指示独立实例的情况。
  *
  * <p>Plain {@link FactoryBean} implementations which do not implement
  * this extended interface are simply assumed to always return independent

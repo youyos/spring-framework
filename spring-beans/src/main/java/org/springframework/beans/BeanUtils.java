@@ -168,6 +168,7 @@ public abstract class BeanUtils {
 		Assert.notNull(ctor, "Constructor must not be null");
 		try {
 			ReflectionUtils.makeAccessible(ctor);
+			// 最终调用ctor.newInstance(args)
 			return (KotlinDetector.isKotlinReflectPresent() && KotlinDetector.isKotlinType(ctor.getDeclaringClass()) ?
 					KotlinDelegate.instantiateClass(ctor, args) : ctor.newInstance(args));
 		}
@@ -190,6 +191,8 @@ public abstract class BeanUtils {
 	 * returns the Java constructor corresponding to the Kotlin primary constructor
 	 * (as defined in the Kotlin specification). Otherwise, in particular for non-Kotlin
 	 * classes, this simply returns {@code null}.
+	 * 返回所提供类的主要构造函数。对于Kotlin类，此返回与Kotlin主构造函数（在Kotlin规范中定义）
+	 * 相对应的Java构造函数。否则，特别是对于非Kotlin 类，这仅返回{@code null}。
 	 * @param clazz the class to check
 	 * @since 5.0
 	 * @see <a href="https://kotlinlang.org/docs/reference/classes.html#constructors">Kotlin docs</a>
