@@ -197,7 +197,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				// 如果还是拿到的是null, allowEarlyReference=true,外面传过来的
 				if (singletonObject == null && allowEarlyReference) {
-					// 再冲singletonFactories map中拿
+					// 再从singletonFactories map中拿
+					// 再实例化bean出来的时候，spring立马往这个singletonFactories map中put了一个工厂
+					// 所以这里拿到的是一个工厂对象，通过工厂对象的getObject()方法就能得到一个bean
+					// 在 AbstractAutowireCapableBeanFactory 类的600行上下能找到
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
 						// 如果拿到了，调用singletonFactory.getObject（）方法返回改bean的实例
@@ -245,6 +248,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				}
 				try {
 					// 这个getObject()方法就是调用之前的那个lambda表达式中的代码
+					// AbstractBeanFactory 类的326行上下 ，调用里面的createBean()
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}
@@ -268,9 +272,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
 					}
+					// 检查并从正在创建的map中移除
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					// 添加到单例池当中
 					addSingleton(beanName, singletonObject);
 				}
 			}
@@ -420,6 +426,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/**
 	 * Register a dependent bean for the given bean,
 	 * to be destroyed before the given bean is destroyed.
+	 * 在给定的bean被销毁之前，为给定的bean注册一个要被销毁的从属bean。
 	 * @param beanName the name of the bean
 	 * @param dependentBeanName the name of the dependent bean
 	 */

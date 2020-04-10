@@ -1176,6 +1176,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
+				// 断点会走这里
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;
@@ -1260,7 +1261,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				// 添加到这个集合汇总
 				autowiredBeanNames.add(autowiredBeanName);
 			}
+			// 如果是一个class对象，解决依赖
 			if (instanceCandidate instanceof Class) {
+				// 如： A 类 有一个B b;属性并且加了@Autowired注解
+				//    当beanName = A时，instanceCandidate = B的class对象
 				instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
 			}
 			Object result = instanceCandidate;
