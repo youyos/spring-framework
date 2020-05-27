@@ -5,6 +5,8 @@ import com.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 /**
  * @Author: youys
  * @Date: 2020/4/3
@@ -30,5 +32,11 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public String getUser() {
 		return "张三";
+	}
+
+
+	@PostConstruct
+	public void init(){
+		System.out.println("userService init is run");
 	}
 }

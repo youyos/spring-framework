@@ -548,7 +548,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Initialize other special beans in specific context subclasses.
 				// 在特定上下文子类中初始化其他特殊bean。
-				// 此处没有实现
+				// 此处没有实现,springboot中重写了此方法，在此方法中创建了Tomcat容器
 				onRefresh();
 
 				// Check for listener beans and register them. 检查侦听器bean并注册它们。

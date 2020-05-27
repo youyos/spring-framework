@@ -560,7 +560,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			// 这一步已经把类new出来了
+			// 这一步已经把类的对象new出来了
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		final Object bean = instanceWrapper.getWrappedInstance();
@@ -598,6 +598,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 			// 解决循环依赖，往singletonFactories添加一个工厂，用来获取bean,key=beanName
 			// 到时候直接通过这个ObjectFactory.getObject()方法拿到bean
+			// getEarlyBeanReference 也调用了后置处理器
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -646,7 +647,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// Register bean as disposable.
+		// Register bean as disposable. 将bean注册为一次性的。
 		try {
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
@@ -959,6 +960,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
 		Object exposedObject = bean;
 		// 非合成类  &&  hasInstantiationAwareBeanPostProcessors() 的值也是true
+		// 第四次执行后置处理器
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
@@ -1391,7 +1393,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// to support styles of field injection.
 		// 在设置属性之前，让任何InstantiationAwareBeanPostProcessors都有机会修改 bean的状态。例如，它可以用于支持字段注入的样式
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
-			// 第四次执行BeanPostProcessor后置处理器
+			// 第五次执行BeanPostProcessor后置处理器
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
@@ -1427,7 +1429,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (pvs == null) {
 				pvs = mbd.getPropertyValues();
 			}
-			// 第五次执行BeanPostProcessor后置处理器 属性注入
+			// 第六次执行BeanPostProcessor后置处理器 属性注入
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
@@ -1651,6 +1653,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Apply the given property values, resolving any runtime references
 	 * to other beans in this bean factory. Must use deep copy, so we
 	 * don't permanently modify this property.
+	 * 应用给定的属性值，将所有运行时引用解析为该bean工厂中的其他bean。必须使用深层复制，因此我们不会永久修改此属性。
 	 * @param beanName the bean name passed for better exception information
 	 * @param mbd the merged bean definition
 	 * @param bw the BeanWrapper wrapping the target object
@@ -1790,16 +1793,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}, getAccessControlContext());
 		}
 		else {
+			// 回调Aware方法
 			invokeAwareMethods(beanName, bean);
 		}
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
-			// 第六次执行BeanPostProcessor后置处理器
+			// 第七次执行BeanPostProcessor后置处理器
+			// ImportAwareBeanPostProcessor 执行Aware接口方法
+			// CommonXXX 执行@PostConstruct注解的方法
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
+			// 回调初始化方法 InitializingBean
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {
@@ -1808,7 +1815,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
-			// 第七次执行BeanPostProcessor后置处理器
+			// 第八次执行BeanPostProcessor后置处理器
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 
