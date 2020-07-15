@@ -1,6 +1,7 @@
 package com;
 
 import com.config.AppConfig;
+import com.service.A;
 import com.service.UserService;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -18,9 +19,11 @@ public class Main {
 				new AnnotationConfigApplicationContext(AppConfig.class);
 
 ////		annotationConfigApplicationContext.scan("com");
+		System.out.println(annotationConfigApplicationContext.getBean(A.class));
 
-		UserService userService = annotationConfigApplicationContext.getBean(UserService.class);
-		System.out.println(userService.getUser());
+
+//		UserService userService = annotationConfigApplicationContext.getBean(UserService.class);
+//		System.out.println(userService.getUser());
 
 	}
 }
