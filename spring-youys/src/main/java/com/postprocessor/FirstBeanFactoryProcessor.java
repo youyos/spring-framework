@@ -25,8 +25,8 @@ public class FirstBeanFactoryProcessor implements BeanDefinitionRegistryPostProc
 //		genericBeanDefinition.setBeanClass(SecondBeanFactoryProcessor.class);
 //		registry.registerBeanDefinition("second",genericBeanDefinition);
 
-		AbstractBeanDefinition userServiceImpl = (AbstractBeanDefinition) registry.getBeanDefinition("userServiceImpl");
-		userServiceImpl.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+//		AbstractBeanDefinition userServiceImpl = (AbstractBeanDefinition) registry.getBeanDefinition("userServiceImpl");
+//		userServiceImpl.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 
 	}
 

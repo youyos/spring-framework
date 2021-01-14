@@ -13,7 +13,7 @@ import javax.annotation.PostConstruct;
  * @Date: 2020/4/3
  * @Description:
  */
-@Service
+//@Service
 public class UserServiceImpl implements UserService {
 
 	private OrderService orderServiceImpl;
@@ -23,9 +23,9 @@ public class UserServiceImpl implements UserService {
 //	}
 
 
-	public UserServiceImpl(OrderService orderService2) {
+	public UserServiceImpl(OrderService orderServiceImpl) {
 //		this.orderService = orderService2;
-		System.out.println("UserServiceImpl有参构造" + orderService2);
+		System.out.println("UserServiceImpl有参构造" + orderServiceImpl);
 	}
 
 	@Override
@@ -42,6 +42,10 @@ public class UserServiceImpl implements UserService {
 	public void setOrderServiceImpl(OrderService orderServiceImpl22) {
 		this.orderServiceImpl = orderServiceImpl;
 		System.out.println("setOrderServiceImpl被调用了" + orderServiceImpl22);
+	}
+
+	public void setABC(String a){
+		System.out.println("---------");
 	}
 
 }

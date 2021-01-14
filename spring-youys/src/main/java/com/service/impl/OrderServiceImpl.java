@@ -11,10 +11,28 @@ import org.springframework.stereotype.Service;
  * @Date: 2020/4/8
  * @Description:
  */
-@Primary
+//@Primary
 @Service
 public class OrderServiceImpl implements OrderService {
 
+
+
+
 	@Autowired
-	private UserService userService;
+	private OrderService orderServiceImpl;
+
+	@Override
+	public void export(String name) {
+		System.out.println(orderServiceImpl.getName());
+//		System.out.println(getNameForDataBase(name));
+	}
+
+	@Override
+	public String getName() {
+		return "orderServiceImpl";
+	}
+
+	protected String getNameForDataBase(String name){
+		return name + ": 张三";
+	}
 }

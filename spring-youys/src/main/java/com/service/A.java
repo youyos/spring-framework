@@ -6,4 +6,7 @@ package com.service;
  * @Description:
  */
 public interface A {
+
+	void test();
+
 }

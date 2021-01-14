@@ -6,4 +6,9 @@ package com.service;
  * @Description:
  */
 public interface OrderService {
+
+
+	void export(String name);
+
+	String getName();
 }

@@ -11,4 +11,14 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class OrderServiceImpl2 implements OrderService {
+
+	@Override
+	public void export(String name) {
+		System.out.println("OrderServiceImpl2");
+	}
+
+	@Override
+	public String getName() {
+		return "OrderServiceImpl2";
+	}
 }

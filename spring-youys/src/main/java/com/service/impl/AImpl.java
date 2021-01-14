@@ -1,6 +1,7 @@
 package com.service.impl;
 
 import com.service.A;
+import org.springframework.context.event.EventListener;
 
 /**
  * @Author: youys
@@ -8,4 +9,10 @@ import com.service.A;
  * @Description:
  */
 public class AImpl  implements A {
+
+
+	@Override
+	public void test(){
+		System.out.println("event listener");
+	}
 }
