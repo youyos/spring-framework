@@ -20,19 +20,19 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class AppConfig {
 
 
-	@Bean
-	public A a(){
-		AImpl a = new AImpl();
-		return a;
-	}
-
-
-	@Bean
-	public B b(){
-		A a = a();
-		System.out.println(a);
-		return new BImpl();
-	}
+//	@Bean
+//	public A a(){
+//		AImpl a = new AImpl();
+//		return a;
+//	}
+//
+//
+//	@Bean
+//	public B b(){
+//		A a = a();
+//		System.out.println(a);
+//		return new BImpl();
+//	}
 
 
 }

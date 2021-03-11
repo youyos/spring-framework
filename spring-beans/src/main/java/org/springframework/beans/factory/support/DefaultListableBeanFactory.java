@@ -712,6 +712,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	/**
 	 * Determine whether the specified bean definition qualifies as an autowire candidate,
 	 * to be injected into other beans which declare a dependency of matching type.
+	 * 确定指定的bean定义是否符合自动装配候选条件，可以注入到声明匹配类型依赖项的其他bean中。
 	 * @param beanName the name of the bean definition to check
 	 * @param descriptor the descriptor of the dependency to resolve
 	 * @param resolver the AutowireCandidateResolver to use for the actual resolution algorithm
@@ -1162,21 +1163,29 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
 
 		descriptor.initParameterNameDiscovery(getParameterNameDiscoverer());
+		// 判断是否是Optional 类型 例如： 可以这样注入 @Autowired private Option<A> a;
 		if (Optional.class == descriptor.getDependencyType()) {
 			return createOptionalDependency(descriptor, requestingBeanName);
 		}
+		// 判断是否ObjectFactory 类型
+		// 例 类A里面有个注入的类型B @Autowired private B b;
+		// 而类型A 是单例的，类型B的原型的，我们从A对象里面拿到的B对象总是同一个
+		// 这时候如果要每次都拿新的对象，则可以这样注入 @Autowired private ObjecctFactor<B> factory;
+		// 然后通过factory.getObject()方法拿到的B对象就是不同的
 		else if (ObjectFactory.class == descriptor.getDependencyType() ||
 				ObjectProvider.class == descriptor.getDependencyType()) {
 			return new DependencyObjectProvider(descriptor, requestingBeanName);
 		}
+		// 这个基本用不到
 		else if (javaxInjectProviderClass == descriptor.getDependencyType()) {
 			return new Jsr330Factory().createDependencyProvider(descriptor, requestingBeanName);
 		}
 		else {
+			// 获取懒加载代理对象
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
-				// 断点会走这里
+				// 基本上断点会走这里
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;
@@ -1189,22 +1198,28 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		InjectionPoint previousInjectionPoint = ConstructorResolver.setCurrentInjectionPoint(descriptor);
 		try {
+			// 前面是否解析过并生成了快照
 			Object shortcut = descriptor.resolveShortcut(this);
 			if (shortcut != null) {
 				return shortcut;
 			}
 
+			// 拿到依赖的class类型
 			Class<?> type = descriptor.getDependencyType();
+			// 这里是QualifierAnnotationAutowireCandidateResolver#getSuggestedValue
+			// 判断类上或者方法上是否加了@Qualifier注解，加了就获取@Value注解里的值
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
 			if (value != null) {
 				if (value instanceof String) {
 					String strVal = resolveEmbeddedValue((String) value);
 					BeanDefinition bd = (beanName != null && containsBean(beanName) ?
 							getMergedBeanDefinition(beanName) : null);
+					// 解析value值，这个值可能是字符串 也可能是对象
 					value = evaluateBeanDefinitionString(strVal, bd);
 				}
 				TypeConverter converter = (typeConverter != null ? typeConverter : getTypeConverter());
 				try {
+					// 根据@Value注解的值进行类型转换
 					return converter.convertIfNecessary(value, type, descriptor.getTypeDescriptor());
 				}
 				catch (UnsupportedOperationException ex) {
@@ -1215,12 +1230,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 
+			// 解析多个Bean, 看type是否是数组、collection、或者是map等，否则返回null
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
 
-			// 找到type类型的实现，会找到多个
+			// 找到type类型的实现，可能会找到多个
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
 			if (matchingBeans.isEmpty()) {
 				if (isRequired(descriptor)) {
@@ -1234,10 +1250,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 			// 如果找到多个
 			if (matchingBeans.size() > 1) {
+				// 决定使用哪一个beanName进行注入
 				autowiredBeanName = determineAutowireCandidate(matchingBeans, descriptor);
 				if (autowiredBeanName == null) {
+					// 如果required=true || 注入的类型不是数组、集合、map等 则抛异常
 					if (isRequired(descriptor) || !indicatesMultipleBeans(type)) {
-						// 如果还是没匹配到，则抛异常
+						// 抛异常
 						return descriptor.resolveNotUnique(descriptor.getResolvableType(), matchingBeans);
 					}
 					else {
@@ -1251,7 +1269,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				instanceCandidate = matchingBeans.get(autowiredBeanName);
 			}
 			else {
-				// We have exactly one match. 找到一个
+				// We have exactly one match. 找到一个，直接用这个
 				Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
 				autowiredBeanName = entry.getKey();
 				instanceCandidate = entry.getValue();
@@ -1429,10 +1447,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	protected Map<String, Object> findAutowireCandidates(
 			@Nullable String beanName, Class<?> requiredType, DependencyDescriptor descriptor) {
 
-		// 首先根据类型查找
+		// 首先根据类型查找，可能会找到多个
 		String[] candidateNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 				this, requiredType, true, descriptor.isEager());
 		Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
+
 		for (Map.Entry<Class<?>, Object> classObjectEntry : this.resolvableDependencies.entrySet()) {
 			Class<?> autowiringType = classObjectEntry.getKey();
 			if (autowiringType.isAssignableFrom(requiredType)) {
@@ -1445,11 +1464,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 		}
 		for (String candidate : candidateNames) {
+			// 这个isSelfReference 首先就是过滤掉自己，比如有些bean自己注入自己
+			// isAutowireCandidate 确定beanName的bean是否可以进行注入
 			if (!isSelfReference(beanName, candidate) && isAutowireCandidate(candidate, descriptor)) {
 				addCandidateEntry(result, candidate, descriptor, requiredType);
 			}
 		}
+		// 如果为空，可能没有找到该类型的bean，也可能只找到自己一个，由于上面把自己过滤掉了
 		if (result.isEmpty()) {
+			// 这里判断是否是数组、集合、map
 			boolean multiple = indicatesMultipleBeans(requiredType);
 			// Consider fallback matches if the first pass failed to find anything...
 			DependencyDescriptor fallbackDescriptor = descriptor.forFallbackMatch();
@@ -1463,6 +1486,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				// Consider self references as a final pass...
 				// but in the case of a dependency collection, not the very same bean itself.
 				for (String candidate : candidateNames) {
+					// 到这就代表还没有找到该类型的bean，这次就不会再把自己过滤掉了
 					if (isSelfReference(beanName, candidate) &&
 							(!(descriptor instanceof MultiElementDescriptor) || !beanName.equals(candidate)) &&
 							isAutowireCandidate(candidate, fallbackDescriptor)) {
@@ -1725,6 +1749,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 		};
 		Object result = doResolveDependency(descriptorToUse, beanName, null, null);
+		// 把找到的对象封装成Optional 类型
 		return (result instanceof Optional ? (Optional<?>) result : Optional.ofNullable(result));
 	}
 

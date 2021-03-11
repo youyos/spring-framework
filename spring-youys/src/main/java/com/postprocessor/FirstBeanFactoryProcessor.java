@@ -19,19 +19,15 @@ public class FirstBeanFactoryProcessor implements BeanDefinitionRegistryPostProc
 
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-		System.out.println("first postProcessBeanDefinitionRegistry");
+		System.out.println("postProcessBeanDefinitionRegistry----");
 
-//		GenericBeanDefinition genericBeanDefinition = new GenericBeanDefinition();
-//		genericBeanDefinition.setBeanClass(SecondBeanFactoryProcessor.class);
-//		registry.registerBeanDefinition("second",genericBeanDefinition);
-
-//		AbstractBeanDefinition userServiceImpl = (AbstractBeanDefinition) registry.getBeanDefinition("userServiceImpl");
-//		userServiceImpl.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-
+//		BeanDefinition destroyService = registry.getBeanDefinition("destroyService");
+//		destroyService.setDestroyMethodName("(inferred)");
 	}
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		System.out.println("first postProcessBeanFactory");
+		System.out.println("postProcessBeanFactory-----");
 	}
+
 }

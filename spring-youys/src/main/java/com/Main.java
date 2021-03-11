@@ -25,13 +25,19 @@ public class Main {
 		annotationConfigApplicationContext.register(AppConfig.class);
 		annotationConfigApplicationContext.refresh();
 
+		annotationConfigApplicationContext.close();
 ////		annotationConfigApplicationContext.scan("com");
 //		System.out.println(annotationConfigApplicationContext.getBean(A.class));
 
 //		annotationConfigApplicationContext.publishEvent(new TestEvent("123"));
 
-		OrderService orderService = (OrderService) annotationConfigApplicationContext.getBean("orderServiceImpl");
-		orderService.export("what your name: ");
+//		OrderService orderService = (OrderService) annotationConfigApplicationContext.getBean("orderServiceImpl");
+//		orderService.export("what your name: ");
+
+		//
+//		A bean = annotationConfigApplicationContext.getBean(A.class);
+//		bean.test();
+
 
 	}
 

@@ -4,18 +4,23 @@ import com.postprocessor.FirstBeanFactoryProcessor;
 import com.service.OrderService;
 import com.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 /**
  * @Author: youys
  * @Date: 2020/4/3
  * @Description:
  */
-//@Service
+@Service
 public class UserServiceImpl implements UserService {
 
+	@Resource
+//	@Qualifier("order1")
 	private OrderService orderServiceImpl;
 
 //	public UserServiceImpl() {
@@ -23,10 +28,10 @@ public class UserServiceImpl implements UserService {
 //	}
 
 
-	public UserServiceImpl(OrderService orderServiceImpl) {
-//		this.orderService = orderService2;
-		System.out.println("UserServiceImpl有参构造" + orderServiceImpl);
-	}
+//	public UserServiceImpl(@Qualifier("order1") OrderService orderServiceImpl) {
+////		this.orderService = orderService2;
+//		System.out.println("UserServiceImpl有参构造" + orderServiceImpl);
+//	}
 
 	@Override
 	public String getUser() {

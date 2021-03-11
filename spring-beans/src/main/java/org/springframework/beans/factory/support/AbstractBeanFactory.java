@@ -1719,6 +1719,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * Add the given bean to the list of disposable beans in this factory,
 	 * registering its DisposableBean interface and/or the given destroy method
 	 * to be called on factory shutdown (if applicable). Only applies to singletons.
+	 * 将给定的bean添加到该工厂的一次性bean列表中，注册其DisposableBean接口和/或给定的destroy方法在工厂关闭时调用（如果适用）。仅适用于单例。
 	 * @param beanName the name of the bean
 	 * @param bean the bean instance
 	 * @param mbd the bean definition for the bean
@@ -1729,6 +1730,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd) {
 		AccessControlContext acc = (System.getSecurityManager() != null ? getAccessControlContext() : null);
+		// 非原型 并且
+		// 实现了DisposableBean接口 || AutoCloseable接口
+		// DestroyMethodName方法名是(inferred) 并且类中有close方法或者shutdown方法
 		if (!mbd.isPrototype() && requiresDestruction(bean, mbd)) {
 			if (mbd.isSingleton()) {
 				// Register a DisposableBean implementation that performs all destruction

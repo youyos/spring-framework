@@ -507,7 +507,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			// 给BeanPostProcessors一个返回代理而不是目标bean实例的机会。
-			// 第一次次调用BeanPostProcessor后置处理器
+			// 第一次次调用BeanPostProcessor后置处理器，可以不走spring的生命周期，自己创建并返回一个对象
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -647,7 +647,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// Register bean as disposable. 将bean注册为一次性的。
+		// Register bean as disposable. 将实现销毁方法的bean添加到map中。
 		try {
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
@@ -1454,6 +1454,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (filteredPds == null) {
 				filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
 			}
+			// 检查依赖关系
 			checkDependencies(beanName, mbd, filteredPds, pvs);
 		}
 
@@ -1800,7 +1801,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}, getAccessControlContext());
 		}
 		else {
-			// 回调Aware方法
+			// 回调Aware方法 (beanName、beanClass、beanFactory)
 			invokeAwareMethods(beanName, bean);
 		}
 

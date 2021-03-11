@@ -36,7 +36,8 @@ import org.springframework.lang.Nullable;
  * @author Rob Harrop
  */
 @SuppressWarnings("serial")
-public class DefaultAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator implements BeanNameAware {
+public class
+DefaultAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator implements BeanNameAware {
 
 	/** Separator between prefix and remainder of bean name. */
 	public static final String SEPARATOR = ".";

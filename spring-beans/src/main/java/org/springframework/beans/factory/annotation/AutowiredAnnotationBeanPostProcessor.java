@@ -397,6 +397,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 找到所有注入原数据
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
 			// 属性注入
@@ -469,6 +470,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
 
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
+				// 找所有加了@Autowired 、@Value注解的属性
 				AnnotationAttributes ann = findAutowiredAnnotation(field);
 				if (ann != null) {
 					if (Modifier.isStatic(field.getModifiers())) {
@@ -487,6 +489,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {
 					return;
 				}
+				// 找所有加了@Autowired 、@Value注解的方法
 				AnnotationAttributes ann = findAutowiredAnnotation(bridgedMethod);
 				if (ann != null && method.equals(ClassUtils.getMostSpecificMethod(method, clazz))) {
 					if (Modifier.isStatic(method.getModifiers())) {
@@ -501,6 +504,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 									method);
 						}
 					}
+					// 是否必需注入
 					boolean required = determineRequiredStatus(ann);
 					PropertyDescriptor pd = BeanUtils.findPropertyForMethod(bridgedMethod, clazz);
 					currElements.add(new AutowiredMethodElement(method, required, pd));
@@ -508,6 +512,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			});
 
 			elements.addAll(0, currElements);
+			// 找完自己要注入的对象，再从父类里面找
 			targetClass = targetClass.getSuperclass();
 		}
 		while (targetClass != null && targetClass != Object.class);
@@ -632,10 +637,12 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 							this.cachedFieldValue = desc;
 							// 注册依赖的bean 的依赖的bean
 							registerDependentBeans(beanName, autowiredBeanNames);
+							// 如果被注入的对象只有一个
 							if (autowiredBeanNames.size() == 1) {
 								String autowiredBeanName = autowiredBeanNames.iterator().next();
 								if (beanFactory.containsBean(autowiredBeanName) &&
 										beanFactory.isTypeMatch(autowiredBeanName, field.getType())) {
+									// 创建一个快照 "依赖描述符"
 									this.cachedFieldValue = new ShortcutDependencyDescriptor(
 											desc, autowiredBeanName, field.getType());
 								}
@@ -644,6 +651,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 						else {
 							this.cachedFieldValue = null;
 						}
+						// 缓存开关，第一次是没有缓存
 						this.cached = true;
 					}
 				}
@@ -683,21 +691,25 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			Object[] arguments;
 			if (this.cached) {
 				// Shortcut for avoiding synchronization...
+				// 避免同步的快捷方式...
 				arguments = resolveCachedArguments(beanName);
 			}
 			else {
 				Class<?>[] paramTypes = method.getParameterTypes();
 				arguments = new Object[paramTypes.length];
+				// 创建一个方法参数个数的 "依赖描述符"
 				DependencyDescriptor[] descriptors = new DependencyDescriptor[paramTypes.length];
 				Set<String> autowiredBeans = new LinkedHashSet<>(paramTypes.length);
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
+				// 每有一个参数就创建一个"依赖描述符"
 				for (int i = 0; i < arguments.length; i++) {
 					MethodParameter methodParam = new MethodParameter(method, i);
 					DependencyDescriptor currDesc = new DependencyDescriptor(methodParam, this.required);
 					currDesc.setContainingClass(bean.getClass());
 					descriptors[i] = currDesc;
 					try {
+						// 解决依赖，并返回一个对象
 						Object arg = beanFactory.resolveDependency(currDesc, beanName, autowiredBeans, typeConverter);
 						if (arg == null && !this.required) {
 							arguments = null;
@@ -714,6 +726,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 						if (arguments != null) {
 							Object[] cachedMethodArguments = new Object[paramTypes.length];
 							System.arraycopy(descriptors, 0, cachedMethodArguments, 0, arguments.length);
+							// 注册依赖的bean 例： A 里面有个属性@Autowired B b,
 							registerDependentBeans(beanName, autowiredBeans);
 							if (autowiredBeans.size() == paramTypes.length) {
 								Iterator<String> it = autowiredBeans.iterator();
@@ -738,6 +751,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			if (arguments != null) {
 				try {
 					ReflectionUtils.makeAccessible(method);
+					// 反射进行方法调用
 					method.invoke(bean, arguments);
 				}
 				catch (InvocationTargetException ex) {
@@ -763,6 +777,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 	/**
 	 * DependencyDescriptor variant with a pre-resolved target bean name.
+	 * 具有预解析目标Bean名称的DependencyDescriptor变体。
 	 */
 	@SuppressWarnings("serial")
 	private static class ShortcutDependencyDescriptor extends DependencyDescriptor {

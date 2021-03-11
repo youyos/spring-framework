@@ -87,7 +87,8 @@ public class InjectionMetadata {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Processing injected element of bean '" + beanName + "': " + element);
 				}
-				// 有2个实现 field 和 method 注入
+				// Autowired有2个实现 field 和 method 注入
+				// Resource使用的就是父类的inject
 				element.inject(target, beanName, pvs);
 			}
 		}
@@ -178,6 +179,7 @@ public class InjectionMetadata {
 			if (this.isField) {
 				Field field = (Field) this.member;
 				ReflectionUtils.makeAccessible(field);
+				// getResourceToInject 获取注入的对象
 				field.set(target, getResourceToInject(target, requestingBeanName));
 			}
 			else {

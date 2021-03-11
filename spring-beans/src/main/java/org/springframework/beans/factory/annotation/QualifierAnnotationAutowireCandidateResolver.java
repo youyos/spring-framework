@@ -146,6 +146,8 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 	public boolean isAutowireCandidate(BeanDefinitionHolder bdHolder, DependencyDescriptor descriptor) {
 		boolean match = super.isAutowireCandidate(bdHolder, descriptor);
 		if (match) {
+			// bdHolder 注入的类型 descriptor要注入的属性或方法上
+			// 检查@Qualifier注解
 			match = checkQualifiers(bdHolder, descriptor.getAnnotations());
 			if (match) {
 				MethodParameter methodParam = descriptor.getMethodParameter();
@@ -162,6 +164,7 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 
 	/**
 	 * Match the given qualifier annotations against the candidate bean definition.
+	 * 匹配是否加了@Qualifier注解
 	 */
 	protected boolean checkQualifiers(BeanDefinitionHolder bdHolder, Annotation[] annotationsToSearch) {
 		if (ObjectUtils.isEmpty(annotationsToSearch)) {
@@ -172,6 +175,7 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 			Class<? extends Annotation> type = annotation.annotationType();
 			boolean checkMeta = true;
 			boolean fallbackToMeta = false;
+			// 如果加了@Qualifier注解,需要进行@Qualifier值匹配
 			if (isQualifier(type)) {
 				if (!checkQualifier(bdHolder, annotation, typeConverter)) {
 					fallbackToMeta = true;
@@ -180,6 +184,7 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 					checkMeta = false;
 				}
 			}
+			// checkMeta默认是true，只有找到了对应的@Qualifier 注解对应的注入类时才会改成false
 			if (checkMeta) {
 				boolean foundMeta = false;
 				for (Annotation metaAnn : type.getAnnotations()) {
@@ -223,14 +228,17 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 		Class<? extends Annotation> type = annotation.annotationType();
 		RootBeanDefinition bd = (RootBeanDefinition) bdHolder.getBeanDefinition();
 
+		// 从bd里面拿Qualifier信息
 		AutowireCandidateQualifier qualifier = bd.getQualifier(type.getName());
 		if (qualifier == null) {
 			qualifier = bd.getQualifier(ClassUtils.getShortName(type));
 		}
 		if (qualifier == null) {
 			// First, check annotation on qualified element, if any
+			// 首先，检查合格元素上的注释（如果有）
 			Annotation targetAnnotation = getQualifiedElementAnnotation(bd, type);
 			// Then, check annotation on factory method, if applicable
+			// 然后，检查工厂方法的注释（如果适用）
 			if (targetAnnotation == null) {
 				targetAnnotation = getFactoryMethodAnnotation(bd, type);
 			}
@@ -246,6 +254,7 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 					try {
 						Class<?> beanType = getBeanFactory().getType(bdHolder.getBeanName());
 						if (beanType != null) {
+							// 根据注入类型的class获取类中的@Qualifier注解
 							targetAnnotation = AnnotationUtils.getAnnotation(ClassUtils.getUserClass(beanType), type);
 						}
 					}
@@ -257,6 +266,7 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 					targetAnnotation = AnnotationUtils.getAnnotation(ClassUtils.getUserClass(bd.getBeanClass()), type);
 				}
 			}
+			// 这里匹配Class上的@Qualifier注入和注入的@Qualifier是否一致
 			if (targetAnnotation != null && targetAnnotation.equals(annotation)) {
 				return true;
 			}
@@ -342,11 +352,13 @@ public class QualifierAnnotationAutowireCandidateResolver extends GenericTypeAwa
 
 	/**
 	 * Determine whether the given dependency declares a value annotation.
+	 * 确定给定的依赖项是否声明了值注释。
 	 * @see Value
 	 */
 	@Override
 	@Nullable
 	public Object getSuggestedValue(DependencyDescriptor descriptor) {
+		// 判断是否有@Value注解
 		Object value = findValue(descriptor.getAnnotations());
 		if (value == null) {
 			MethodParameter methodParam = descriptor.getMethodParameter();
